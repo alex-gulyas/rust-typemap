@@ -139,6 +139,13 @@ impl<A: UnsafeAnyExt + ?Sized> TypeMap<A> {
         })
     }
 
+    /// Find a value in the map and get a reference to it if it exists, or
+    /// insert a default value first.
+    pub fn get_or_default<K: Key>(&mut self) -> &mut K::Value
+    where K::Value: Any + Implements<A> + Default {
+        self.entry::<K>().or_insert_with(Default::default)
+    }
+
     /// Get the given key's corresponding entry in the map for in-place manipulation.
     pub fn entry<K: Key>(&mut self) -> Entry<K, A>
     where K::Value: Any + Implements<A> {
