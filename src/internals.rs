@@ -75,6 +75,64 @@ unsafe impl UnsafeAnyExt for CloneAny + Send {}
 unsafe impl UnsafeAnyExt for CloneAny + Sync {}
 unsafe impl UnsafeAnyExt for CloneAny + Send + Sync {}
 
+
+/// A marker trait meant for use as the `A` parameter in `TypeMap`.
+///
+/// This can be used to construct `TypeMap`s containing only types which
+/// implement `Debug` and `Clone` like so: `TypeMap::<DebugCloneAny>::custom()`, which produces
+/// a `TypeMap<DebugCloneAny>`. Combine `DebugCloneAny` with `Send` or `Sync` to add
+/// additional bounds.
+///
+/// There is also an exported alias for this type of `TypeMap`, `DebugCloneAny`.
+pub trait DebugCloneAny: Any + Debug {
+    #[doc(hidden)]
+    fn clone_any(&self) -> Box<DebugCloneAny>;
+    #[doc(hidden)]
+    fn clone_any_send(&self) -> Box<DebugCloneAny + Send> where Self: Send;
+    #[doc(hidden)]
+    fn clone_any_sync(&self) -> Box<DebugCloneAny + Sync> where Self: Sync;
+    #[doc(hidden)]
+    fn clone_any_send_sync(&self) -> Box<DebugCloneAny + Send + Sync> where Self: Send + Sync;
+}
+
+impl<T: Any + Debug + Clone> DebugCloneAny for T {
+    fn clone_any(&self) -> Box<DebugCloneAny> { Box::new(self.clone()) }
+
+    fn clone_any_send(&self) -> Box<DebugCloneAny + Send> where Self: Send {
+        Box::new(self.clone())
+    }
+
+    fn clone_any_sync(&self) -> Box<DebugCloneAny + Sync> where Self: Sync {
+        Box::new(self.clone())
+    }
+
+    fn clone_any_send_sync(&self) -> Box<DebugCloneAny + Send + Sync>
+    where Self: Send + Sync {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<DebugCloneAny> {
+    fn clone(&self) -> Box<DebugCloneAny> { (**self).clone_any() }
+}
+
+impl Clone for Box<DebugCloneAny + Send> {
+    fn clone(&self) -> Box<DebugCloneAny + Send> { (**self).clone_any_send() }
+}
+
+impl Clone for Box<DebugCloneAny + Sync> {
+    fn clone(&self) -> Box<DebugCloneAny + Sync> { (**self).clone_any_sync() }
+}
+
+impl Clone for Box<DebugCloneAny + Send + Sync> {
+    fn clone(&self) -> Box<DebugCloneAny + Send + Sync> { (**self).clone_any_send_sync() }
+}
+
+unsafe impl UnsafeAnyExt for DebugCloneAny {}
+unsafe impl UnsafeAnyExt for DebugCloneAny + Send {}
+unsafe impl UnsafeAnyExt for DebugCloneAny + Sync {}
+unsafe impl UnsafeAnyExt for DebugCloneAny + Send + Sync {}
+
 #[doc(hidden)] // Not actually exported
 pub unsafe trait Implements<A: ?Sized + UnsafeAnyExt> {
     fn into_object(self) -> Box<A>;
@@ -122,4 +180,20 @@ unsafe impl<T: DebugAny + Sync> Implements<DebugAny + Sync> for T {
 
 unsafe impl<T: DebugAny + Send + Sync> Implements<DebugAny + Send + Sync> for T {
     fn into_object(self) -> Box<DebugAny + Send + Sync> { Box::new(self) }
+}
+
+unsafe impl<T: DebugCloneAny> Implements<DebugCloneAny> for T {
+    fn into_object(self) -> Box<DebugCloneAny> { Box::new(self) }
+}
+
+unsafe impl<T: DebugCloneAny + Send> Implements<DebugCloneAny + Send> for T {
+    fn into_object(self) -> Box<DebugCloneAny + Send> { Box::new(self) }
+}
+
+unsafe impl<T: DebugCloneAny + Sync> Implements<DebugCloneAny + Sync> for T {
+    fn into_object(self) -> Box<DebugCloneAny + Sync> { Box::new(self) }
+}
+
+unsafe impl<T: DebugCloneAny + Send + Sync> Implements<DebugCloneAny + Send + Sync> for T {
+    fn into_object(self) -> Box<DebugCloneAny + Send + Sync> { Box::new(self) }
 }

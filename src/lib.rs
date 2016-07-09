@@ -11,7 +11,7 @@ use std::marker::PhantomData;
 
 use Entry::{Occupied, Vacant};
 
-pub use internals::{CloneAny, DebugAny};
+pub use internals::{CloneAny, DebugAny, DebugCloneAny};
 use internals::Implements;
 
 /// A map keyed by types.
@@ -56,6 +56,12 @@ pub type DebugMap = TypeMap<DebugAny>;
 
 /// A version of `TypeMap` containing only `Debug + Send + Sync` types.
 pub type ShareDebugMap = TypeMap<DebugAny + Send + Sync>;
+
+/// A version of `TypeMap` containing only `Debug + Clone` types.
+pub type DebugCloneMap = TypeMap<DebugCloneAny>;
+
+/// A version of `TypeMap` containing only `Debug + Clone + Send + Sync` types.
+pub type ShareDebugCloneMap = TypeMap<DebugCloneAny + Send + Sync>;
 
 // Assert some properties on SyncMap, SendMap and ShareMap.
 fn _assert_types() {
